@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.0/min/vs/editor/editor.main.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+
+        .container {
+            display: flex;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+        }
+
+        .left-section {
+            flex: 1;
+            padding: 20px;
+            max-width: 50%;
+            overflow: hidden;
+        }
+
+        .right-section {
+            flex: 1;
+            background-color: #f7f7f7;
+            padding: 20px;
+            max-width: 50%;
+            overflow: hidden;
+            border-left: 1px solid #ccc;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 16px;
+        }
+
+        #editor {
+            width: 100%;
+            height: 500px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #output {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+            flex-grow: 1;
+            overflow-y: auto;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-icon {
+            font-size: 32px;
+            color: #007bff;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+
+        .response-title {
+            font-size: 24px;
+            margin-top: 20px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 10px;
+        }
+
+        .response-content {
+            font-size: 18px;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-section">
+            <h1>Code Assistant</h1>
+            <label for="queryType">Select Query Type:</label>
+            <select id="queryType">
+                <option value="Generate_output">Generate Output</option>
+                <option value="debug">Debug Code</option>
+                <option value="check_quelity">Check Quality</option>
+                <option value="convert">Convert Code</option>
+            </select>
+
+            <label for="editor">Your Code:</label>
+            <div id="editor"></div>
+
+            <label for="convertTo">Target Language (if converting):</label>
+            <input type="text" id="convertTo" placeholder="Specify target format">
+
+            <button id="submitBtn">Submit</button>
+        </div>
+
+        <div class="right-section">
+            <h1>API Response</h1>
+            <div id="output">
+                <h2 class="response-title">Generated Code:</h2>
+                <pre id="generatedCode" class="response-content"></pre>
+            </div>
+            <div class="search-icon">&#128269;</div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.0/min/vs/loader.js"></script>
+    <script>
+        let editor;
+    
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.0/min/vs' } });
+    
+        require(['vs/editor/editor.main'], function () {
+            editor = monaco.editor.create(document.getElementById('editor'), {
+                value: '',
+                language: 'javascript',
+                theme: 'vs-dark'
+            });
+        });
+    
+        document.getElementById('submitBtn').addEventListener('click', async () => {
+            const code = editor.getValue();
+            const queryType = document.getElementById('queryType').value;
+            const convertTo = document.getElementById('convertTo').value;
+            const output = document.getElementById('output');
+    
+            try {
+                const response = await fetch('https://real-puce-beaver-garb.cyclic.app', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ Actual_Code: code, query: queryType, Convert_to: convertTo }),
+                });
+    
+                if (response.ok) {
+                    const data = await response.json();
+                    const generatedCode = data.code;
+                    document.getElementById('generatedCode').textContent = generatedCode;
+                    output.style.display = 'block';
+                } else {
+                    throw new Error('HTTP Request Failed');
+                }
+            } catch (error) {
+                alert('Error: Unable to generate code');
+            }
+        });
+    </script>
+</body>
+</html>
